@@ -1,0 +1,228 @@
+/* Accessibility + palette layer. Loaded last so it wins over Divi's inline CSS.
+   Palette values are defined and contrast-checked in tools/contrast.py —
+   change them there first, run it, then mirror the result here. */
+
+:root {
+  --ink: #0B2942;
+  --ocean: #0E6E8C;
+  --ocean-deep: #0A5670;
+  --amber: #8A4A00;
+  --muted: #4F5B66;
+  --sky: #8FD3EA;
+}
+
+/* --- Skip link (WCAG 2.4.1) ------------------------------------------- */
+.skip-to-content {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100000;
+  padding: 12px 20px;
+  background: var(--ink);
+  color: #fff !important;
+  font: 700 16px/1.2 system-ui, sans-serif;
+  text-decoration: none;
+  border-bottom-right-radius: 6px;
+  transform: translateY(-120%);
+  transition: transform 0.15s ease-in-out;
+}
+.skip-to-content:focus {
+  transform: translateY(0);
+}
+
+.sr-only {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Visible focus on every interactive thing (WCAG 2.4.7) ------------ */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--ocean);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* Divi paints buttons in brand colors, so the ring needs to invert on them. */
+.et_pb_button:focus-visible,
+#footer-bottom a:focus-visible,
+.et_pb_bg_layout_dark a:focus-visible {
+  outline-color: #fff;
+}
+#main-content:focus {
+  outline: none;
+}
+
+/* --- Titles the theme rendered as plain styled text ------------------- */
+h1.a11y-page-title {
+  margin: 0 0 0.4em;
+  color: var(--ink);
+  font-size: 42px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+/* --- On-dark surfaces: OCEAN is too dark to read on navy -------------- */
+#main-footer a,
+#footer-bottom a,
+.et_pb_bg_layout_dark a:not(.et_pb_button) {
+  color: var(--sky);
+}
+#main-footer a:hover,
+#footer-bottom a:hover {
+  color: #fff;
+}
+
+/* --- Buttons ---------------------------------------------------------- */
+/* Contrast is already handled by the palette swap in the theme's own CSS, so
+   nothing here touches color or background. Divi uses .et_pb_button for both
+   filled buttons and bare text links ("READ FULL BIO") — forcing a fill or a
+   white label onto the whole class makes the text ones unreadable. */
+.et_pb_button {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.et_pb_button:hover {
+  filter: saturate(1.1) brightness(1.06);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px rgba(11, 41, 66, 0.45);
+}
+.et_pb_button:active {
+  transform: translateY(0);
+}
+
+/* --- Links must not rely on color alone (WCAG 1.4.1) ------------------ */
+/* Inside a paragraph, a color change is the only cue the theme gives. */
+.et_pb_text_inner p a,
+.entry-content p a,
+.comment-content a,
+.must-log-in a,
+#footer-info a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* --- Tap targets (WCAG 2.5.8) ----------------------------------------- */
+/* Divi pins the search widget to height:40px !important and paints its label
+   #666 on #ddd (4.22:1), so both need to be overridden at the same weight. */
+#s,
+#searchsubmit,
+.et_pb_widget .wp-block-search__input,
+.et_pb_widget .wp-block-search__button {
+  height: auto !important;
+  min-height: 44px !important;
+  padding: 10px 14px !important;
+  box-sizing: border-box !important;
+  line-height: 1.2 !important;
+}
+#s,
+.et_pb_widget .wp-block-search__input {
+  color: var(--ink) !important;
+  border: 1px solid var(--muted) !important;
+}
+#searchsubmit,
+.et_pb_widget .wp-block-search__button {
+  min-width: 44px;
+  background: var(--ocean) !important;
+  color: #fff !important;
+  border: 1px solid var(--ocean) !important;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* --- Text over photographs (WCAG 1.4.3) ------------------------------- */
+/* axe can only read a computed background-color, so it scores text on a photo
+   as "incomplete" and says nothing. Measured with tools/measure_contrast.js,
+   these sections ran 1.30:1 to 2.42:1 — the worst contrast on the whole site.
+   A scrim fixes it without touching the photography or the type color.
+   Section numbers are Divi's and would shift if the site is re-scraped;
+   measure_contrast.js is the guard that catches that. */
+.et_pb_fullwidth_header,
+body.home .et_pb_section_0,
+body.home .et_pb_section_4,
+#physician-referrals {
+  position: relative;
+  isolation: isolate;
+}
+.et_pb_fullwidth_header::after,
+body.home .et_pb_section_0::after,
+body.home .et_pb_section_4::after,
+#physician-referrals::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+/* Keep the content above its own scrim. */
+.et_pb_fullwidth_header > .et_pb_fullwidth_header_container,
+body.home .et_pb_section_0 > .et_pb_row,
+body.home .et_pb_section_4 > .et_pb_row,
+#physician-referrals > .et_pb_row {
+  position: relative;
+  z-index: 1;
+}
+
+/* Navy headings on a photo — lift the backdrop toward white. The hero keeps
+   the sleeping-woman image legible on the right where no text sits. */
+body.home .et_pb_section_0::after {
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.93) 50%,
+    rgba(255, 255, 255, 0.72) 72%,
+    rgba(255, 255, 255, 0) 92%
+  );
+}
+/* The hero paragraph runs wider than its heading, out past the strongest part
+   of the veil, so it also needs the darker ink. */
+body.home .et_pb_section_0 p {
+  color: var(--ink);
+}
+.et_pb_fullwidth_header::after {
+  background: rgba(255, 255, 255, 0.82);
+}
+
+/* White text on the pale cyan artwork — drop the backdrop toward navy. */
+body.home .et_pb_section_4::after,
+#physician-referrals::after {
+  background: linear-gradient(135deg, rgba(10, 47, 71, 0.82) 0%, rgba(11, 41, 66, 0.72) 100%);
+}
+
+/* --- Mobile header overlap (WCAG 2.5.8) ------------------------------- */
+/* Below 980px the toolbox header goes position:absolute so it can float over a
+   hero image. Pages built on the default template have no hero, so it lands on
+   top of the content instead — on /sleep-disorders/ it covers the search box.
+   Those pages get it back in the flow. */
+@media (max-width: 980px) {
+  body:not(.et_pb_pagebuilder_layout) #dtb-before-header {
+    position: static !important;
+  }
+}
+
+/* --- Respect reduced motion (WCAG 2.3.3) ------------------------------ */
+/* Divi reveals most sections on scroll. Without this the whole page moves. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .et_animated,
+  .et-waypoint {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

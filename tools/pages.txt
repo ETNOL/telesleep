@@ -1,0 +1,17 @@
+/
+/central-sleep-apnea/
+/contacts/
+/cpap-help/
+/insomnia/
+/inspire-cpap-alternative-sleep-apnea-treatment/
+/licenses-and-certifications/
+/narcolepsy/
+/obstructive-sleep-apnea/
+/our-locations/
+/our-sleep-experts/
+/parasomnias/
+/restless-legs-syndrome/
+/sleep-disorders/
+/videos/
+/category/uncategorized/
+/hello-world/

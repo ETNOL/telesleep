@@ -1,0 +1,14 @@
+{
+  "name": "telesleep-a11y-tools",
+  "private": true,
+  "description": "Accessibility verification for the tele-sleep.com static site.",
+  "scripts": {
+    "axe": "node axe_audit.js",
+    "contrast": "node measure_contrast.js",
+    "check": "node axe_audit.js && node measure_contrast.js"
+  },
+  "dependencies": {
+    "pngjs": "^7.0.0",
+    "puppeteer-core": "^23.0.0"
+  }
+}
