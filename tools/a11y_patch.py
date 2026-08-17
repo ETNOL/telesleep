@@ -75,7 +75,6 @@ ALT = {
 MISSING_H1 = {
     "videos/index.html": ("Videos", True),
     "licenses-and-certifications/index.html": ("Licenses and Certifications", True),
-    "category/uncategorized/index.html": ("Uncategorized", False),
 }
 
 

@@ -37,6 +37,10 @@ cd tools && npm install && npm run check
 - Blank gaps elsewhere are Divi's scroll-reveal animations — identical on the live site,
   not a scrape artifact.
 
-## Junk worth deleting
+## Removed from the scrape
 
-`hello-world/`, `category/uncategorized/` — default WordPress placeholders.
+- `hello-world/`, `category/uncategorized/` — default WordPress placeholders, deleted
+  along with the "Recent Posts" sidebar widget that linked to them.
+- `wp-login.php`, `xmlrpc.php` and the WordPress head markup that pointed at endpoints
+  the scrape never captured (RSD, pingback, REST/`wp-json`, oEmbed, RSS feeds) plus the
+  WordPress and Divi `generator` version metas.
