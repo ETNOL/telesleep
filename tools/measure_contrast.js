@@ -19,6 +19,7 @@ const PAGES = fs.readFileSync(path.join(__dirname, 'pages.txt'), 'utf8').trim().
 
 // Ignore near-transparent antialiasing fringes when finding the worst pixel.
 const PERCENTILE = 0.02;
+const VIEWPORTS = [[1440, 900, 'desktop'], [390, 844, 'mobile']];
 
 const lin = c => (c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 const lum = (r, g, b) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
@@ -31,10 +32,14 @@ const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
   const failures = [];
   let checked = 0;
 
+  // Both viewports, because a translucent panel lands on a different part of
+  // the photo behind it once the columns stack: the home page's "Helpful Links"
+  // clears AA at 1440px and misses it at 390px.
+  for (const [vw, vh, viewport] of VIEWPORTS)
   for (const page of PAGES) {
     const url = BASE + page;
     const p = await browser.newPage();
-    await p.setViewport({ width: 1440, height: 900 });
+    await p.setViewport({ width: vw, height: vh });
     try { await p.goto(url, { waitUntil: 'networkidle2', timeout: 45000 }); }
     catch (e) { console.error('nav fail', url, e.message); }
     // Divi reveals sections on scroll; unrevealed text measures as invisible.
@@ -49,13 +54,29 @@ const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
     // Every text node whose backdrop includes an image or gradient.
     const targets = await p.evaluate(() => {
+      // A background only hides what is behind it when it is fully opaque. The
+      // home page's "Helpful Links" panel is rgba(14,110,140,.85) sitting over a
+      // photograph that is not an ancestor background at all - it is the image
+      // module the panel overlaps - so no walk up the tree can name the colour
+      // behind that text. A translucent fill anywhere in the chain means the
+      // backdrop has to be photographed rather than computed, which is also why
+      // axe returns "incomplete" here instead of a ratio.
+      const alphaOf = colour => {
+        const m = /^rgba?\(([^)]*)\)/.exec(colour || '');
+        if (!m) return 1;
+        const parts = m[1].split(',');
+        return parts.length > 3 ? parseFloat(parts[3]) : 1;
+      };
       const hasImage = el => {
+        let seeThroughFill = false;
         for (let e = el; e && e !== document.documentElement; e = e.parentElement) {
           const c = getComputedStyle(e);
           if (c.backgroundImage && c.backgroundImage !== 'none') return true;
-          if (c.backgroundColor && !/rgba\(0, 0, 0, 0\)/.test(c.backgroundColor)) return false;
+          const a = alphaOf(c.backgroundColor);
+          if (a >= 1) return seeThroughFill;
+          if (a > 0) seeThroughFill = true;
         }
-        return false;
+        return seeThroughFill;
       };
       const out = [];
       document.querySelectorAll('h1,h2,h3,h4,h5,h6,p,a,span,li,label').forEach((el, i) => {
@@ -118,21 +139,21 @@ const ratio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       const need = t.large ? 3.0 : 4.5;
       checked++;
       if (worst < need) {
-        failures.push({ page, text: t.text, color: t.color, worst: worst.toFixed(2), need });
+        failures.push({ page, viewport, text: t.text, color: t.color, worst: worst.toFixed(2), need });
       }
     }
     await p.close();
   }
   await browser.close();
 
-  console.log(`measured ${checked} image-backed text elements across ${PAGES.length} pages`);
+  console.log(`measured ${checked} image-backed text elements across ${PAGES.length} pages, ${VIEWPORTS.length} viewports`);
   if (!failures.length) {
     console.log('all clear — every one meets its WCAG AA threshold');
     return;
   }
   console.log(`\n${failures.length} below threshold:`);
   for (const f of failures) {
-    console.log(`  ${f.worst}:1 (need ${f.need})  ${f.page}  "${f.text}"  color=${f.color}`);
+    console.log(`  ${f.worst}:1 (need ${f.need})  ${f.viewport.padEnd(7)} ${f.page}  "${f.text}"  color=${f.color}`);
   }
   process.exitCode = 1;
 })();

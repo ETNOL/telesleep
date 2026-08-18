@@ -34,6 +34,15 @@ RGBA = {
 }
 SHORTHAND = {"#666": MUTED}
 
+# WCAG 1.4.3 — swapping the hex is not enough when the fill is translucent. A
+# section painted rgba(OCEAN, .85) lets through whatever it overlaps, and on the
+# home page that is a photograph the "Helpful Links" panel sits on top of — not
+# an ancestor background, so neither axe nor a walk up the tree can name the
+# colour behind the text. Once the columns stack at 390px the panel lands on a
+# lighter part of the photo and the white links measure 4.27:1. At .92 the worst
+# pixel behind them still clears AA, and the photo reads through as before.
+MIN_FILL_ALPHA = 0.92
+
 
 def _rgb(hexcolor):
     h = hexcolor.lstrip("#")
@@ -57,7 +66,30 @@ def fix_color_notations(text):
     text = re.sub(r"(rgba?)\(([^)]*)\)", repl, text, flags=re.I)
     for old, new in SHORTHAND.items():
         text = re.sub(re.escape(old) + r"\b(?![0-9a-f])", new, text, flags=re.I)
-    return text
+    return raise_fill_alpha(text)
+
+
+def raise_fill_alpha(text):
+    """Bring translucent brand fills up to MIN_FILL_ALPHA. Runs against the new
+    colour, not the old one, so it reaches fills an earlier pass already swapped
+    and stays a no-op once they are at the floor."""
+    r, g, b = _rgb(OCEAN)
+
+    def repl(m):
+        parts = [p.strip() for p in m.group(1).split(",")]
+        if len(parts) != 4:
+            return m.group(0)
+        try:
+            if tuple(int(p) for p in parts[:3]) != (r, g, b):
+                return m.group(0)
+            alpha = float(parts[3])
+        except ValueError:
+            return m.group(0)
+        if alpha >= MIN_FILL_ALPHA:
+            return m.group(0)
+        return f"rgba({r},{g},{b},{MIN_FILL_ALPHA})"
+
+    return re.sub(r"rgba\(([^)]*)\)", repl, text, flags=re.I)
 
 # Images the scrape left with alt="" that carry real meaning.
 ALT = {

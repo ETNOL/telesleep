@@ -1,5 +1,5 @@
 // Checks axe can't do: reflow (1.4.10), text spacing (1.4.12), target size (2.5.8),
-// clipped text, focus return from the bio popups.
+// clipped text, duplicate ids in the rendered DOM, focus return from the bio popups.
 const fs = require('fs');
 const puppeteer = require('puppeteer-core');
 const BASE = 'http://localhost:8766';
@@ -11,8 +11,20 @@ const SPACING = `* { line-height: 1.5 !important; letter-spacing: 0.12em !import
 async function scan(page) {
   return page.evaluate(() => {
     const doc = document.documentElement;
-    const res = { overflowX: doc.scrollWidth - doc.clientWidth, wide: [], clipped: [], small: [] };
+    const res = { overflowX: doc.scrollWidth - doc.clientWidth, wide: [], clipped: [], small: [], dupIds: [] };
     const vw = doc.clientWidth;
+    // Divi clones id-bearing markup in the browser (#top-menu into #mobile_menu,
+    // an #et-boc wrapper per .et-l layout), so duplicates show up here and never
+    // in the HTML file. axe stopped reporting them in 4.10, when WCAG 2.2 retired
+    // 4.1.1 Parsing - but a duplicate id still breaks label/for, aria-labelledby
+    // and every other id-based association. wp-content/a11y.js de-dupes them.
+    const byId = {};
+    for (const el of document.querySelectorAll('[id]')) {
+      const id = el.getAttribute('id');
+      if (id) (byId[id] = byId[id] || []).push(el.tagName.toLowerCase());
+    }
+    for (const [id, tags] of Object.entries(byId))
+      if (tags.length > 1) res.dupIds.push({ id, n: tags.length, tags: tags.join(',') });
     for (const el of document.querySelectorAll('body *')) {
       const cs = getComputedStyle(el);
       if (cs.display === 'none' || cs.visibility === 'hidden' || !el.getClientRects().length) continue;
@@ -87,12 +99,13 @@ async function scan(page) {
       if (r.wide.length) bits.push(`wide=${r.wide.length}`);
       if (r.clipped.length) bits.push(`clipped=${r.clipped.length}`);
       if (r.small.length) bits.push(`small=${r.small.length}`);
+      if (r.dupIds.length) bits.push(`dupIds=${r.dupIds.length}`);
       if (bits.length) { console.log(`${m.padEnd(12)} ${p.padEnd(48)} ${bits.join(' ')}`); fails++; }
     }
   if (fails) {
     console.log('detail: tools/probe-results.json');
     process.exitCode = 1;
   } else {
-    console.log(`${Object.keys(report).length} pages at 320px and with 1.4.12 text spacing — nothing clipped, nothing overflowing, no undersized target`);
+    console.log(`${Object.keys(report).length} pages at 320px and with 1.4.12 text spacing — nothing clipped, nothing overflowing, no undersized target, no duplicate id`);
   }
 })();
