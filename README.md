@@ -13,7 +13,7 @@ Links are relative (`../cpap-help/`), so it needs a server that maps directories
 
 ## Layout
 
-17 pages as `<slug>/index.html`, assets under `wp-content/` and `wp-includes/` at their
+15 pages as `<slug>/index.html`, assets under `wp-content/` and `wp-includes/` at their
 original paths — so any URL from the live site resolves the same here.
 
 ## Accessibility
@@ -27,12 +27,16 @@ cd tools && npm install && npm run check
 
 - `tools/contrast.py` — the palette, with a contrast assertion per color pairing
 - `tools/a11y_patch.py` — applies every fix; idempotent, re-run after a re-scrape
+- `tools/probe_manual.js` — what axe cannot see: 320px reflow, 1.4.12 text spacing,
+  clipped containers, target size
 - `wp-content/a11y.css` — the override layer, loaded last on every page
+- `wp-content/a11y.js` — the same job for markup built in the browser (the bio
+  popups and the contact form)
 
 ## Not captured (needs the WP backend)
 
-- **Contact form** (`/contacts/`) — Ninja Forms builds its markup from `admin-ajax.php`.
-  Renders as a blank gap. Replace with a plain `<form>` when we rebuild.
+- **Contact form submission** (`/contacts/`) — the form itself renders (Ninja Forms
+  builds it from inline JS), but there is no backend, so submitting goes nowhere.
 - Google Fonts / Analytics / Ads still load from Google, same as live.
 - Blank gaps elsewhere are Divi's scroll-reveal animations — identical on the live site,
   not a scrape artifact.

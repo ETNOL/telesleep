@@ -226,3 +226,59 @@ body.home .et_pb_section_4::after,
     transform: none !important;
   }
 }
+
+/* --- Text must not be clipped (WCAG 1.4.12) --------------------------- */
+/* The home page's condition cards are pinned to height:295px with
+   overflow:hidden, so the 1.4.12 text-spacing overrides lop 69px off four of
+   them. min-height looks the same and cannot clip. Keep this scoped to the home
+   page: Divi numbers its module classes per page, and .et_pb_blurb_0 elsewhere
+   is a small address block that a 295px floor inflates by 157px.
+   tools/probe_manual.js is the guard. */
+body.home .et_pb_blurb_0.et_pb_blurb,
+body.home .et_pb_blurb_1.et_pb_blurb,
+body.home .et_pb_blurb_2.et_pb_blurb,
+body.home .et_pb_blurb_3.et_pb_blurb,
+body.home .et_pb_blurb_4.et_pb_blurb,
+body.home .et_pb_blurb_5.et_pb_blurb {
+  height: auto !important;
+  min-height: 295px;
+}
+
+/* --- Target size, continued (WCAG 2.5.8) ------------------------------ */
+/* Divi's bare-text buttons ("READ FULL BIO") render 92x20 — under the 24px
+   floor. Padding would move them; a min-height does not. */
+.et_pb_button {
+  display: inline-block;
+  min-height: 24px;
+}
+/* Wistia's keyboard proxy for the poster image is a 1x1 transparent button,
+   sized by an inline style — so this needs the same weight. */
+button.w-vulcan-v2-button[aria-label^="Play Video"] {
+  min-width: 24px !important;
+  min-height: 24px !important;
+}
+/* The footer logo link wraps a 352x22 image — wide, but under the 24px floor. */
+.et_pb_image > a {
+  display: inline-block;
+  min-height: 24px;
+}
+
+/* --- Form field boundaries (WCAG 1.4.11) ------------------------------ */
+/* Ninja Forms paints its inputs #F7F7F7 on white (1.06:1) and outlines them in
+   #C4C4C4 (1.63:1), so the border is the control's only visible boundary and it
+   misses the 3:1 floor. axe does not check non-text contrast. */
+.nf-form-content input:not([type="submit"]),
+.nf-form-content textarea,
+.nf-form-content select {
+  border: 1px solid var(--muted) !important;
+}
+
+/* An inline link's hit box is its font's content area — 22px at 16px type — and
+   a link sitting alone in its own block gets no 2.5.8 inline exception. A pixel
+   of vertical padding lifts the box to 24px and moves no text. */
+.et_pb_text_inner a:not(.et_pb_button),
+.et_pb_blurb_description a:not(.et_pb_button),
+#footer-info a,
+#footer-bottom a {
+  padding-block: 1px;
+}

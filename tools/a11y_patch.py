@@ -90,6 +90,20 @@ def fix_viewport(h):
         r"\1width=device-width, initial-scale=1.0\2", h)
 
 
+def cap_image_widths(h):
+    """WCAG 1.4.10 — Divi writes a hardcoded pixel width on some image modules
+    (`.et_pb_image_1{width:400px}`), which at 320px runs past the column and cuts
+    the copy beside it. Capping the module itself is the fix; a blanket
+    `.et_pb_image{max-width:100%}` in a11y.css is not, because it also overrides
+    the per-module max-width that sizes the ACHC badge in the header."""
+    def repl(m):
+        rule = m.group(0)
+        if "max-width" in rule:
+            return rule
+        return rule.replace("{", "{max-width:100%;", 1)
+    return re.sub(r"\.et_pb_image_\d+\{[^}]*\bwidth:\d+px[^}]*\}", repl, h)
+
+
 def fix_colors(h):
     for old, new in COLORS.items():
         h = re.sub(re.escape(old), new, h, flags=re.I)
@@ -116,6 +130,15 @@ def add_stylesheet(h, path):
         return h
     link = f'<link rel="stylesheet" href="{rel_prefix(path)}wp-content/a11y.css">'
     return h.replace("</head>", link + "\n</head>", 1)
+
+
+def add_script(h, path):
+    """Popup and form markup is built in the browser; wp-content/a11y.js patches
+    it once it exists."""
+    if "a11y.js" in h:
+        return h
+    tag = f'<script src="{rel_prefix(path)}wp-content/a11y.js" defer></script>'
+    return h.replace("</head>", tag + "\n</head>", 1)
 
 
 def add_skip_link(h):
@@ -224,7 +247,9 @@ def patch(path):
     h = original = open(full, encoding="utf-8").read()
     h = fix_viewport(h)
     h = fix_colors(h)
+    h = cap_image_widths(h)
     h = add_stylesheet(h, path)
+    h = add_script(h, path)
     h = add_skip_link(h)
     h = add_landmarks(h)
     h = fix_image_alt(h)

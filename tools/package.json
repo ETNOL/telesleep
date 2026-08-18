@@ -5,7 +5,8 @@
   "scripts": {
     "axe": "node axe_audit.js",
     "contrast": "node measure_contrast.js",
-    "check": "node axe_audit.js && node measure_contrast.js"
+    "probe": "node probe_manual.js",
+    "check": "node axe_audit.js && node measure_contrast.js && node probe_manual.js"
   },
   "dependencies": {
     "pngjs": "^7.0.0",
