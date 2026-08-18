@@ -74,7 +74,6 @@ ALT = {
 # Pages with no h1 at all -> (heading text, visible?)
 MISSING_H1 = {
     "videos/index.html": ("Videos", True),
-    "licenses-and-certifications/index.html": ("Licenses and Certifications", True),
 }
 
 

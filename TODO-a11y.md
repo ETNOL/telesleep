@@ -1,12 +1,12 @@
 # WCAG Audit — Status
 
 **Standard:** WCAG 2.1 AA (plus 2.2's 2.5.8 target size)
-**Pages:** all 15, desktop 1440×900 + mobile 390×844
+**Pages:** all 14, desktop 1440×900 + mobile 390×844
 **Last run:** 2026-08-18
 
 | Check | Result |
 |---|---|
-| `npm run axe` — axe-core 4.10.2, 30 page/viewport runs | **0 violations** (was 9 rules / 378 elements) |
+| `npm run axe` — axe-core 4.10.2, 28 page/viewport runs | **0 violations** (was 9 rules / 378 elements) |
 | `npm run contrast` — rendered-pixel contrast over images | **0 below threshold** (was 18) |
 | `npm run probe` — 320px reflow, 1.4.12 spacing, target size | **0 findings** (was 8 clipped / 1 overflowing / 8 undersized) |
 
@@ -69,7 +69,7 @@ Run all three: `cd tools && npm install && npm run check` (needs the site served
 - [x] **Heading order** — 22 instances
   `h4` was used for visual size. Retagging would break Divi's per-module CSS, so the elements
   keep their tags and carry `aria-level` instead — same look, correct outline.
-- [x] **Missing `<h1>`** — 3 pages.
+- [x] **Missing `<h1>`** — 2 pages (a third was `/licenses-and-certifications/`, since removed).
 
 ### Second pass — what axe never looks at
 axe reports 0 violations sitewide, so everything below was found by measuring the
@@ -80,7 +80,7 @@ rendered page instead (`tools/probe_manual.js`, now part of `npm run check`).
   `overflow:hidden`, so applying the 1.4.12 text-spacing overrides lopped 69px off
   four of them. Now `height:auto` with a `min-height`, which looks identical and
   cannot clip. Scoped to `body.home`: Divi numbers its module classes per page, and
-  `.et_pb_blurb_0` on the other 14 pages is a small address block that a 295px floor
+  `.et_pb_blurb_0` on the other 13 pages is a small address block that a 295px floor
   inflates by 157px.
 - [x] **Image module wider than its column** — 1.4.10 · `/inspire-…/`
   `.et_pb_image_1` carries a hardcoded `width:400px`, so at 320px it ran 144px past
@@ -92,7 +92,7 @@ rendered page instead (`tools/probe_manual.js`, now part of `npm run check`).
   Not an issue: the contact column reads as 59px short of its content, but the
   overflow is Ninja Forms' honeypot field, which is `position:absolute` on purpose.
   `probe_manual.js` ignores anything out of flow.
-- [x] **Reflow at 320px / 400% zoom** — 1.4.10 · all 15 pages
+- [x] **Reflow at 320px / 400% zoom** — 1.4.10 · all 14 pages
   Now measured: no horizontal scroll, no element wider than the viewport.
 - [x] **Undersized targets** — 2.5.8 · 8 elements
   "READ FULL BIO" rendered 92×20 and the footer logo link 352×22; Wistia's keyboard

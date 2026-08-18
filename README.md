@@ -13,7 +13,7 @@ Links are relative (`../cpap-help/`), so it needs a server that maps directories
 
 ## Layout
 
-15 pages as `<slug>/index.html`, assets under `wp-content/` and `wp-includes/` at their
+14 pages as `<slug>/index.html`, assets under `wp-content/` and `wp-includes/` at their
 original paths — so any URL from the live site resolves the same here.
 
 ## Accessibility
@@ -45,6 +45,8 @@ cd tools && npm install && npm run check
 
 - `hello-world/`, `category/uncategorized/` — default WordPress placeholders, deleted
   along with the "Recent Posts" sidebar widget that linked to them.
+- `licenses-and-certifications/` — the certificates were outdated. The page, its two
+  scanned images and the footer link on every page are gone.
 - `wp-login.php`, `xmlrpc.php` and the WordPress head markup that pointed at endpoints
   the scrape never captured (RSD, pingback, REST/`wp-json`, oEmbed, RSS feeds) plus the
   WordPress and Divi `generator` version metas.
