@@ -23,7 +23,10 @@
   "send_email": [
     {
       "name": "EMAIL",
-      "allowed_destination_addresses": ["eric.nolte@mediavine.com", "drshuteye@tranquilitysleep.com"]
+      "allowed_destination_addresses": [
+        "eric.nolte@mediavine.com",
+        "michelle@tranquilitysleep.com",
+      ],
     }
   ],
 
@@ -32,7 +35,7 @@
     // DMARC record cannot affect mail from the practice's own mailboxes.
     "CONTACT_FROM": "noreply@tele-sleep.com",
     // Testing inbox. Swap to drshuteye@tranquilitysleep.com to go live.
-    "CONTACT_TO": "drshuteye@tranquilitysleep.com",
+    "CONTACT_TO": "michelle@tranquilitysleep.com",
   },
 
   "observability": { "enabled": true }
