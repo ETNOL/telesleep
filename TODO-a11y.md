@@ -159,6 +159,44 @@ in `tools/`, and both are now fixed and covered by a check.
   - it only ran at 1440px, while the failure only exists at 390px. It now runs both
     viewports like `axe_audit.js` and `probe_manual.js` do — 41 became 80.
 
+### Third pass — the accessibilitychecker.org audit (`wcag-audit.pdf`)
+An external scan of the live domain, home page only, reported 19 failing elements
+across 2 rules. Both rules are real here too, both were invisible to all three tools
+in `tools/`, and both are now fixed and covered by a check.
+
+- [x] **Duplicate ids in the rendered DOM** — 4.1.1 · 15 ids, 19 surplus elements, every page
+  Divi assembles two id-carrying copies in the browser, so nothing that reads the
+  HTML file can see them: it clones `#top-menu` into `#mobile_menu` with all 14
+  `menu-item-*` ids intact, and its builder wraps each `.et-l` layout — the
+  before-header bar and the five bio popups — in a `<div id="et-boc">`, six of them.
+  axe misses it too: its `duplicate-id` rules were dropped in 4.10, when WCAG 2.2
+  retired 4.1.1 Parsing. The criterion is gone but the breakage is not — a repeated
+  id still breaks `for`, `aria-labelledby` and every other id-based association.
+  `wp-content/a11y.js` now renumbers them as they appear. The element that owns the
+  id in the source keeps it, so anchors, CSS and `getElementById` still resolve
+  where they did; each later copy takes a `-2` suffix. Re-measured: 0 duplicates on
+  all 14 pages at both viewports, and 0 of 487 layout boxes moved.
+- [x] **White links on a translucent panel** — 1.4.3 · 4 links, mobile only
+  The home page's "Helpful Links" panel is `rgba(OCEAN, .85)`. The palette rebuild
+  swapped the colour and kept the alpha, which is where it went wrong: the photo the
+  panel *overlaps* — the image module beside it, not an ancestor background — reads
+  through. No walk up the tree can name that colour, which is why axe returns
+  "incomplete" rather than a ratio, and why `measure_contrast.js` skipped these
+  elements: it stopped at the first non-transparent background. At 1440px the panel
+  covers a dark part of the photo and the white type clears AA at 4.57–6.31:1. Once
+  the columns stack at 390px it lands on a lighter part and the last four links
+  measure 4.27–4.49:1 — exactly the four the audit named.
+  `a11y_patch.py` now raises translucent brand fills to `MIN_FILL_ALPHA = 0.92`,
+  against the new colour so it also reaches fills an earlier pass already swapped.
+  Worst case is now 4.96:1 at 390px, 5.11:1 at 1440px; the photo still reads through.
+
+  Two blind spots in the tooling let this sit, both closed:
+  - `measure_contrast.js` treated any non-transparent background as opaque. A fill
+    with alpha below 1 now keeps the walk going, so the text gets photographed
+    instead of computed — 28 measured elements became 41.
+  - it only ran at 1440px, while the failure only exists at 390px. It now runs both
+    viewports like `axe_audit.js` and `probe_manual.js` do — 41 became 80.
+
 ### Manual
 - [x] **Skip link** — 2.4.1 · first focusable element on every page.
 - [x] **Image alt text** — 1.1.1 · team photos and the ACHC accreditation badge.
@@ -191,6 +229,13 @@ it is Divi's scroll-reveal, and no container on any page cuts text at either vie
 
 `tools/a11y_patch.py` and `tools/contact_form_patch.py` are both idempotent — re-run them
 after any re-scrape, then `npm run check`.
+
+A third thing to know, alongside the two below: **a colour swap that keeps an alpha
+is not a contrast fix.** A translucent fill composites with whatever is behind it,
+including elements it merely overlaps, so the ratio depends on the pixels rather than
+on the pairing `contrast.py` guards. `MIN_FILL_ALPHA` covers the fills on the site
+today; anything new that puts text on a see-through panel has to be measured, and
+`npm run contrast` is what measures it.
 
 A third thing to know, alongside the two below: **a colour swap that keeps an alpha
 is not a contrast fix.** A translucent fill composites with whatever is behind it,
