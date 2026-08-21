@@ -13,6 +13,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from contrast import AMBER, MUTED, OCEAN  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# The mirror itself. Everything outside public/ is tooling, and is not deployed.
+SITE = os.path.join(ROOT, "public")
 
 # Old brand colors -> new. Every old value failed AA in both text roles, and the
 # replacements clear it in both, so one mapping covers fills and text alike.
@@ -145,7 +147,7 @@ def patch_stylesheets():
     """The theme's own CSS carries the failing colors too, so the page-level
     swap alone leaves section fills and widget text behind."""
     changed = 0
-    for css in glob.glob(ROOT + "/wp-content/**/*.css", recursive=True):
+    for css in glob.glob(SITE + "/wp-content/**/*.css", recursive=True):
         if css.endswith("a11y.css"):
             continue
         text = original = open(css, encoding="utf-8", errors="replace").read()
@@ -274,7 +276,7 @@ def fix_heading_order(h):
 
 
 def patch(path):
-    full = os.path.join(ROOT, path)
+    full = os.path.join(SITE, path)
     h = original = open(full, encoding="utf-8").read()
     h = fix_viewport(h)
     h = fix_colors(h)
@@ -295,7 +297,7 @@ def patch(path):
 
 
 if __name__ == "__main__":
-    pages = sorted(os.path.relpath(p, ROOT)
-                   for p in glob.glob(ROOT + "/**/index.html", recursive=True))
+    pages = sorted(os.path.relpath(p, SITE)
+                   for p in glob.glob(SITE + "/**/index.html", recursive=True))
     changed = [p for p in pages if patch(p)]
     print(f"patched {len(changed)}/{len(pages)} pages, {patch_stylesheets()} stylesheets")

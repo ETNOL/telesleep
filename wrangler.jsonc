@@ -1,0 +1,42 @@
+{
+  // Static mirror + one route (POST /api/contact). Deploy: `npx wrangler deploy`.
+  //
+  // This is a Worker rather than a Pages project because the send_email binding
+  // below — Cloudflare's own outbound email — is Workers-only. Pages Functions
+  // cannot bind it.
+  "name": "tele-sleep",
+  "main": "worker.js",
+  "compatibility_date": "2026-08-18",
+
+  // public/ holds the mirror exactly as the scrape left it. Keeping it separate
+  // from the repo root keeps the tooling and this config out of the upload, and
+  // keeps wrangler's own .wrangler/ state out of the asset watcher.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+
+  // send.tele-sleep.com must be onboarded under Email Service > Email Sending, and
+  // every address listed here must be added and verified as a destination address.
+  // Keep the allowlist: sending to verified destinations is free on any plan, while
+  // an unrestricted recipient list requires a paid Workers plan.
+  "send_email": [
+    {
+      "name": "EMAIL",
+      "allowed_destination_addresses": [
+        "eric.nolte@mediavine.com",
+        "drshuteye@tranquilitysleep.com"
+      ]
+    }
+  ],
+
+  "vars": {
+    // Must be on the domain onboarded to Email Sending. A subdomain, so that its
+    // DMARC record cannot affect mail from the practice's own mailboxes.
+    "CONTACT_FROM": "noreply@tele-sleep.com",
+    // Testing inbox. Swap to drshuteye@tranquilitysleep.com to go live.
+    "CONTACT_TO": "eric.nolte@mediavine.com"
+  },
+
+  "observability": { "enabled": true }
+}

@@ -89,9 +89,12 @@ rendered page instead (`tools/probe_manual.js`, now part of `npm run check`).
   own CSS. A blanket `.et_pb_image{max-width:100%}` in a11y.css is the wrong tool —
   it also overrides the per-module `max-width:125px` that sizes the ACHC badge, and
   blows the header up.
-  Not an issue: the contact column reads as 59px short of its content, but the
-  overflow is Ninja Forms' honeypot field, which is `position:absolute` on purpose.
-  `probe_manual.js` ignores anything out of flow.
+  Not an issue: the contact column used to read as 59px short of its content, but the
+  overflow was the honeypot field, which is `position:absolute` on purpose and which
+  `probe_manual.js` ignores along with anything else out of flow. The static form now
+  keeps its honeypot in `.nf-sr-only` and names it with `aria-label` rather than a
+  `<label>` — clipped text is a 1.4.4 failure to the probe, and an input with no text
+  node in it has nothing to clip.
 - [x] **Reflow at 320px / 400% zoom** — 1.4.10 · all 14 pages
   Now measured: no horizontal scroll, no element wider than the viewport.
 - [x] **Undersized targets** — 2.5.8 · 8 elements
@@ -110,11 +113,13 @@ rendered page instead (`tools/probe_manual.js`, now part of `npm run check`).
   as `role="dialog" aria-modal="true"` named from the person's heading, with a
   "Close" button. Focus already returned to the trigger on close — verified.
 - [x] **Contact form landmark named** — 1.3.1 · `/contacts/`
-  Ninja Forms names its `role="form"` through an `aria-labelledby` pointing at an
-  empty `<span>`. The form does render in the mirror (it builds itself from inline
-  JS, no `admin-ajax.php` needed) — labels, `aria-describedby`, `aria-required` and
-  `role="alert"` error slots are all present and correct.
-  Both this and the popups are patched at runtime by `wp-content/a11y.js`.
+  Ninja Forms named its `role="form"` through an `aria-labelledby` pointing at an empty
+  `<span>`, and `wp-content/a11y.js` fixed that at runtime. The form is no longer built
+  in the browser at all: `tools/contact_form_patch.py` replaced it with static markup
+  that carries its own `aria-label`, keeps every label associated by `for`, and pairs a
+  `role="status"` notice with a `role="alert"` error slot. The a11y.js branch is now a
+  no-op and is kept only in case the page is re-scraped without the form patch.
+  The popups are still patched at runtime by `wp-content/a11y.js`.
 
 ### Third pass — the accessibilitychecker.org audit (`wcag-audit.pdf`)
 An external scan of the live domain, home page only, reported 19 failing elements
@@ -170,9 +175,12 @@ Not a real issue: the 16 "Read More" hits were a JS config string, never rendere
   are done: focus lands in the dialog on open, Escape closes it, and focus returns to
   the "READ FULL BIO" trigger. The rest still needs a human at a keyboard.
 - [ ] **Screen reader pass** (VoiceOver) over the nav and the bio popups.
-- [ ] **Contact form submission** — the markup is now correct and reachable, but the
-  static mirror has no backend, so the error and success paths (`role="alert"` slots,
-  focus after submit) are untested.
+- [ ] **Contact form submission, with a screen reader.** The paths themselves are covered
+  now that there is a backend (`worker.js`): `tools/contact_form_check.js` drives the real
+  form in Chrome and asserts the success notice, the reset, the re-enabled button and the
+  server's error text. What a human still has to judge is how it *sounds* — nothing moves
+  focus after submit, on the theory that the `role="status"` notice and the `role="alert"`
+  error announce where they are.
 - [ ] `/sleep-disorders/` has an empty content area — it renders as a bare sidebar.
   Pre-existing on the live site.
 
@@ -181,7 +189,8 @@ it is Divi's scroll-reveal, and no container on any page cuts text at either vie
 
 ## Keeping it passing
 
-`tools/a11y_patch.py` is idempotent — re-run it after any re-scrape, then `npm run check`.
+`tools/a11y_patch.py` and `tools/contact_form_patch.py` are both idempotent — re-run them
+after any re-scrape, then `npm run check`.
 
 A third thing to know, alongside the two below: **a colour swap that keeps an alpha
 is not a contrast fix.** A translucent fill composites with whatever is behind it,

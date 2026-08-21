@@ -6,6 +6,7 @@
     "axe": "node axe_audit.js",
     "contrast": "node measure_contrast.js",
     "probe": "node probe_manual.js",
+    "form": "node contact_form_check.js",
     "check": "node axe_audit.js && node measure_contrast.js && node probe_manual.js"
   },
   "dependencies": {
